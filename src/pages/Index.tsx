@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { TransactionProvider } from '@/contexts/TransactionContext';
 import ScoreCards from '@/components/ScoreCards';
 import TransactionList from '@/components/TransactionList';
