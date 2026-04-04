@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { TransactionProvider } from '@/contexts/TransactionContext';
 import ScoreCards from '@/components/ScoreCards';
 import TransactionList from '@/components/TransactionList';
@@ -9,6 +10,7 @@ import FloatingChat from '@/components/FloatingChat';
 import { Transaction } from '@/types/transaction';
 
 function Dashboard() {
+  const { signOut } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
 
@@ -29,10 +31,15 @@ function Dashboard() {
           <h1 className="text-2xl font-display font-bold">Finanças</h1>
           <p className="text-muted-foreground text-sm">Transações e balanço</p>
         </div>
-        <Button onClick={() => setModalOpen(true)} className="gap-2">
-          <Plus size={18} />
-          Nova Transação
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setModalOpen(true)} className="gap-2">
+            <Plus size={18} />
+            Nova Transação
+          </Button>
+          <Button variant="ghost" size="icon" onClick={signOut} title="Sair">
+            <LogOut size={18} />
+          </Button>
+        </div>
       </div>
 
       <ScoreCards />
