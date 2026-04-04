@@ -1,16 +1,52 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TransactionProvider } from '@/contexts/TransactionContext';
+import ScoreCards from '@/components/ScoreCards';
+import TransactionList from '@/components/TransactionList';
+import TransactionModal from '@/components/TransactionModal';
+import FloatingChat from '@/components/FloatingChat';
+import { Transaction } from '@/types/transaction';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+function Dashboard() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
+
+  const handleEdit = (t: Transaction) => {
+    setEditTransaction(t);
+    setModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setModalOpen(false);
+    setEditTransaction(null);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-display font-bold">Finanças</h1>
+          <p className="text-muted-foreground text-sm">Transações e balanço</p>
+        </div>
+        <Button onClick={() => setModalOpen(true)} className="gap-2">
+          <Plus size={18} />
+          Nova Transação
+        </Button>
+      </div>
+
+      <ScoreCards />
+      <TransactionList onEdit={handleEdit} />
+      <TransactionModal open={modalOpen} onClose={handleClose} editTransaction={editTransaction} />
+      <FloatingChat />
     </div>
   );
-};
+}
 
-const Index = PlaceholderIndex;
-
-export default Index;
+export default function Index() {
+  return (
+    <TransactionProvider>
+      <Dashboard />
+    </TransactionProvider>
+  );
+}
