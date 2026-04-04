@@ -10,6 +10,7 @@ import FloatingChat from '@/components/FloatingChat';
 import { Transaction } from '@/types/transaction';
 
 function Dashboard() {
+  const { signOut } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
 
