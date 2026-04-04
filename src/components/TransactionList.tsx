@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTransactions } from '@/contexts/TransactionContext';
 import { Transaction, TYPE_LABELS } from '@/types/transaction';
+import { isCurrentMonth } from '@/hooks/useScoreCards';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,7 +18,12 @@ interface TransactionListProps {
 export default function TransactionList({ onEdit }: TransactionListProps) {
   const { transactions, updateTransaction, deleteTransaction } = useTransactions();
 
-  const sorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Show confirmed only for current month, pending always
+  const visible = transactions.filter(t =>
+    t.status === 'pendente' || (t.status === 'confirmado' && isCurrentMonth(t.date))
+  );
+
+  const sorted = [...visible].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const general = sorted;
   const debitos = sorted.filter(t => t.type === 'debito');
