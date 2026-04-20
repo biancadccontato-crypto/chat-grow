@@ -30,7 +30,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   const allSorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Débitos ordenados por data crescente (mais antigos primeiro)
-  const general = sorted;
+  const general = sorted.filter(t => t.status === 'confirmado');
   const debitos = visible
     .filter(t => t.type === 'debito')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -107,7 +107,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
     <Tabs defaultValue="todos" className="mt-6">
       <TabsList className="bg-muted border border-border">
         <TabsTrigger value="todos">Todos</TabsTrigger>
-        <TabsTrigger value="geral">Geral</TabsTrigger>
+        <TabsTrigger value="balanco">Balanço</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
@@ -115,7 +115,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
       <TabsContent value="todos" className="mt-4">
         {renderTable(todosSorted, false, true)}
       </TabsContent>
-      <TabsContent value="geral" className="mt-4">
+      <TabsContent value="balanco" className="mt-4">
         {renderTable(general, false, true)}
       </TabsContent>
       <TabsContent value="debitos" className="mt-4">
