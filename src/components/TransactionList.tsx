@@ -35,6 +35,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
     .filter(t => t.type === 'debito')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
+  const entradas = sorted.filter(t => t.type === 'entrada');
 
   const handleStatusToggle = (t: Transaction) => {
     updateTransaction(t.id, { status: t.status === 'pendente' ? 'confirmado' : 'pendente' });
@@ -108,6 +109,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
         <TabsTrigger value="todos">Todos</TabsTrigger>
         <TabsTrigger value="geral">Geral</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
+        <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
       </TabsList>
       <TabsContent value="todos" className="mt-4">
@@ -121,6 +123,9 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
       </TabsContent>
       <TabsContent value="investimentos" className="mt-4">
         {renderTable(investimentos, false, false)}
+      </TabsContent>
+      <TabsContent value="entradas" className="mt-4">
+        {renderTable(entradas, false, false)}
       </TabsContent>
     </Tabs>
   );
