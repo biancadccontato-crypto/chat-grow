@@ -115,7 +115,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
     <Tabs defaultValue="todos" className="mt-6">
       <TabsList className="bg-muted border border-border">
         <TabsTrigger value="todos">Todos</TabsTrigger>
-        <TabsTrigger value="geral">Geral</TabsTrigger>
+        <TabsTrigger value="balanco">Balanço</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
