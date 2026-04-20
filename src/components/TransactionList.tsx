@@ -108,7 +108,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
       </TabsList>
       <TabsContent value="todos" className="mt-4">
-        {renderTable(allSorted, false, true)}
+        {renderTable(todosSorted, false, true)}
       </TabsContent>
       <TabsContent value="geral" className="mt-4">
         {renderTable(general, false, true)}
