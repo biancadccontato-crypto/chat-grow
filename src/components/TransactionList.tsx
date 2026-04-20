@@ -104,28 +104,28 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   );
 
   return (
-    <Tabs defaultValue="todos" className="mt-6">
+    <Tabs defaultValue="balanco" className="mt-6">
       <TabsList className="bg-muted border border-border">
-        <TabsTrigger value="todos">Todos</TabsTrigger>
         <TabsTrigger value="balanco">Balanço</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
+        <TabsTrigger value="todos">Todos</TabsTrigger>
       </TabsList>
-      <TabsContent value="todos" className="mt-4">
-        {renderTable(todosSorted, false, true)}
-      </TabsContent>
       <TabsContent value="balanco" className="mt-4">
         {renderTable(general, false, true)}
       </TabsContent>
       <TabsContent value="debitos" className="mt-4">
         {renderTable(debitos, true, false)}
       </TabsContent>
+      <TabsContent value="entradas" className="mt-4">
+        {renderTable(entradas, false, false)}
+      </TabsContent>
       <TabsContent value="investimentos" className="mt-4">
         {renderTable(investimentos, false, false)}
       </TabsContent>
-      <TabsContent value="entradas" className="mt-4">
-        {renderTable(entradas, false, false)}
+      <TabsContent value="todos" className="mt-4">
+        {renderTable(todosSorted, false, true)}
       </TabsContent>
     </Tabs>
   );
