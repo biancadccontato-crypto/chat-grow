@@ -30,12 +30,20 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   const allSorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Débitos ordenados por data crescente (mais antigos primeiro)
-  const general = sorted;
   const debitos = visible
     .filter(t => t.type === 'debito')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
   const entradas = sorted.filter(t => t.type === 'entrada');
+
+  // Balanço: ordena cronologicamente para acumular, depois inverte para mostrar mais recente no topo
+  const balancoAsc = [...visible].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  let running = 0;
+  const balancoRows = balancoAsc.map(t => {
+    const delta = t.type === 'entrada' ? t.value : -t.value;
+    running += delta;
+    return { transaction: t, runningBalance: running };
+  }).reverse();
 
   const handleStatusToggle = (t: Transaction) => {
     updateTransaction(t.id, { status: t.status === 'pendente' ? 'confirmado' : 'pendente' });
