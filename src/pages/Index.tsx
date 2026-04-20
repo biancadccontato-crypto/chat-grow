@@ -6,7 +6,6 @@ import { TransactionProvider } from '@/contexts/TransactionContext';
 import ScoreCards from '@/components/ScoreCards';
 import TransactionList from '@/components/TransactionList';
 import TransactionModal from '@/components/TransactionModal';
-import FloatingChat from '@/components/FloatingChat';
 import { Transaction } from '@/types/transaction';
 
 function Dashboard() {
@@ -45,7 +44,6 @@ function Dashboard() {
       <ScoreCards />
       <TransactionList onEdit={handleEdit} />
       <TransactionModal open={modalOpen} onClose={handleClose} editTransaction={editTransaction} />
-      <FloatingChat />
     </div>
   );
 }
