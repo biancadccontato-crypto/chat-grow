@@ -30,12 +30,20 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   const allSorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Débitos ordenados por data crescente (mais antigos primeiro)
-  const general = sorted;
   const debitos = visible
     .filter(t => t.type === 'debito')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
   const entradas = sorted.filter(t => t.type === 'entrada');
+
+  // Balanço: ordena cronologicamente para acumular, depois inverte para mostrar mais recente no topo
+  const balancoAsc = [...visible].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  let running = 0;
+  const balancoRows = balancoAsc.map(t => {
+    const delta = t.type === 'entrada' ? t.value : -t.value;
+    running += delta;
+    return { transaction: t, runningBalance: running };
+  }).reverse();
 
   const handleStatusToggle = (t: Transaction) => {
     updateTransaction(t.id, { status: t.status === 'pendente' ? 'confirmado' : 'pendente' });
@@ -107,7 +115,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
     <Tabs defaultValue="todos" className="mt-6">
       <TabsList className="bg-muted border border-border">
         <TabsTrigger value="todos">Todos</TabsTrigger>
-        <TabsTrigger value="geral">Geral</TabsTrigger>
+        <TabsTrigger value="balanco">Balanço</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
@@ -115,8 +123,53 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
       <TabsContent value="todos" className="mt-4">
         {renderTable(todosSorted, false, true)}
       </TabsContent>
-      <TabsContent value="geral" className="mt-4">
-        {renderTable(general, false, true)}
+      <TabsContent value="balanco" className="mt-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="p-3">Descrição</th>
+                <th className="p-3">Valor</th>
+                <th className="p-3">Data</th>
+                <th className="p-3">Categoria</th>
+                <th className="p-3">Tipo</th>
+                <th className="p-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {balancoRows.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada</td></tr>
+              ) : balancoRows.map(({ transaction: t, runningBalance }) => (
+                <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors animate-fade-in">
+                  <td className="p-3 font-medium">
+                    {t.description}
+                    {t.status === 'pendente' && (
+                      <Badge variant="outline" className="ml-2 border-warning text-warning text-xs">Pendente</Badge>
+                    )}
+                  </td>
+                  <td className={`p-3 font-semibold ${runningBalance >= 0 ? 'text-success' : 'text-magenta'}`}>
+                    {formatCurrency(runningBalance)}
+                  </td>
+                  <td className="p-3 text-muted-foreground">{t.date}</td>
+                  <td className="p-3 text-muted-foreground">{t.category}</td>
+                  <td className="p-3">
+                    <Badge variant="secondary" className="text-xs">{TYPE_LABELS[t.type]}</Badge>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex gap-2">
+                      <button onClick={() => onEdit(t)} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Pencil size={16} />
+                      </button>
+                      <button onClick={() => deleteTransaction(t.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </TabsContent>
       <TabsContent value="debitos" className="mt-4">
         {renderTable(debitos, true, false)}
