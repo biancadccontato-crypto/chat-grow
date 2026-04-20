@@ -23,7 +23,10 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
 
   const sorted = [...visible].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // All transactions (no month filter) for "Todos" tab
+  // All transactions for "Todos" tab - ordenados por data crescente (mais antigos primeiro)
+  const todosSorted = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // All transactions (no month filter) for any other use
   const allSorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Débitos ordenados por data crescente (mais antigos primeiro)
