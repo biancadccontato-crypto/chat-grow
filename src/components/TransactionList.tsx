@@ -18,15 +18,16 @@ interface TransactionListProps {
 export default function TransactionList({ onEdit }: TransactionListProps) {
   const { transactions, updateTransaction, deleteTransaction } = useTransactions();
 
-  // Show confirmed only for current month, pending always
-  const visible = transactions.filter(t =>
-    t.status === 'pendente' || (t.status === 'confirmado' && isCurrentMonth(t.date))
-  );
+  // Show only current month transactions for all tabs
+  const visible = transactions.filter(t => isCurrentMonth(t.date));
 
   const sorted = [...visible].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  // Débitos ordenados por data crescente (mais antigos primeiro)
   const general = sorted;
-  const debitos = sorted.filter(t => t.type === 'debito');
+  const debitos = visible
+    .filter(t => t.type === 'debito')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
 
   const handleStatusToggle = (t: Transaction) => {
