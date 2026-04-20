@@ -18,10 +18,13 @@ interface TransactionListProps {
 export default function TransactionList({ onEdit }: TransactionListProps) {
   const { transactions, updateTransaction, deleteTransaction } = useTransactions();
 
-  // Show only current month transactions for all tabs
+  // Show only current month transactions for geral, debitos, investimentos tabs
   const visible = transactions.filter(t => isCurrentMonth(t.date));
 
   const sorted = [...visible].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // All transactions (no month filter) for "Todos" tab
+  const allSorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Débitos ordenados por data crescente (mais antigos primeiro)
   const general = sorted;
@@ -97,12 +100,16 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   );
 
   return (
-    <Tabs defaultValue="geral" className="mt-6">
+    <Tabs defaultValue="todos" className="mt-6">
       <TabsList className="bg-muted border border-border">
+        <TabsTrigger value="todos">Todos</TabsTrigger>
         <TabsTrigger value="geral">Geral</TabsTrigger>
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
       </TabsList>
+      <TabsContent value="todos" className="mt-4">
+        {renderTable(allSorted, false, true)}
+      </TabsContent>
       <TabsContent value="geral" className="mt-4">
         {renderTable(general, false, true)}
       </TabsContent>
