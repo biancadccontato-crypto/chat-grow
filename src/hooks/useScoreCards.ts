@@ -7,6 +7,14 @@ function isCurrentMonth(dateStr: string) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
+function isBeforeCurrentMonth(dateStr: string) {
+  const now = new Date();
+  const d = new Date(dateStr);
+  if (d.getFullYear() < now.getFullYear()) return true;
+  if (d.getFullYear() === now.getFullYear() && d.getMonth() < now.getMonth()) return true;
+  return false;
+}
+
 export function useScoreCards() {
   const { transactions } = useTransactions();
 
@@ -35,13 +43,32 @@ export function useScoreCards() {
       .filter(t => t.type === 'investimento')
       .reduce((sum, t) => sum + t.value, 0);
 
-    const balanco = receitas - saidas - investimentos;
+    // Saldo acumulado positivo dos meses anteriores (apenas confirmadas)
+    const previousConfirmed = transactions.filter(
+      t => t.status === 'confirmado' && isBeforeCurrentMonth(t.date)
+    );
+
+    // Agrupa por ano-mês e soma apenas saldos positivos
+    const monthlyBalances = new Map<string, number>();
+    previousConfirmed.forEach(t => {
+      const d = new Date(t.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const current = monthlyBalances.get(key) ?? 0;
+      const sign = t.type === 'entrada' ? 1 : -1;
+      monthlyBalances.set(key, current + sign * t.value);
+    });
+
+    const saldoAnterior = Array.from(monthlyBalances.values())
+      .filter(v => v > 0)
+      .reduce((sum, v) => sum + v, 0);
+
+    const balanco = saldoAnterior + receitas - saidas - investimentos;
 
     const entradasPendentes = visible
       .filter(t => t.type === 'entrada' && t.status === 'pendente')
       .reduce((sum, t) => sum + t.value, 0);
 
-    return { receitas, saidas, debitos: debitosPendentes, investimentos, balanco, entradasPendentes };
+    return { receitas, saidas, debitos: debitosPendentes, investimentos, balanco, entradasPendentes, saldoAnterior };
   }, [transactions]);
 }
 
