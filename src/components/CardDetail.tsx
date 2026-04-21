@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCards } from '@/contexts/CardContext';
+import { useTransactions } from '@/contexts/TransactionContext';
 import { CreditCard as CardType, CardPurchase } from '@/types/card';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Pencil, Trash2, Plus, Send } from 'lucide-react';
+import { Pencil, Trash2, Plus, Send, RefreshCw } from 'lucide-react';
 import PurchaseFormModal from './PurchaseFormModal';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -21,6 +22,7 @@ const fmt = (n: number) =>
 
 export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
   const { purchases, deletePurchase } = useCards();
+  const { transactions } = useTransactions();
   const navigate = useNavigate();
   const [purchaseModal, setPurchaseModal] = useState(false);
   const [editing, setEditing] = useState<CardPurchase | null>(null);
@@ -47,17 +49,31 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
   const totalUsado = cardPurchases.reduce((s, p) => s + p.totalValue, 0);
   const pctLimite = Math.min(100, (totalUsado / card.limit) * 100);
 
-  const handleSendToHome = (monthKey: string, total: number) => {
+  const invoiceDescription = (monthKey: string) => {
+    const [y, m] = monthKey.split('-').map(Number);
+    const dueDate = new Date(y, m - 1, Math.min(card.dueDay, new Date(y, m, 0).getDate()));
+    return `Fatura ${card.name} - ${format(dueDate, 'MMM/yyyy', { locale: ptBR })}`;
+  };
+
+  const findExistingInvoice = (monthKey: string) => {
+    const desc = invoiceDescription(monthKey);
+    return transactions.find(
+      t => t.description === desc && t.category === 'Cartão' && t.type === 'saida'
+    );
+  };
+
+  const handleSendToHome = (monthKey: string, total: number, existingId?: string) => {
     const [y, m] = monthKey.split('-').map(Number);
     const dueDate = new Date(y, m - 1, Math.min(card.dueDay, new Date(y, m, 0).getDate()));
     const params = new URLSearchParams({
       type: 'saida',
-      category: 'Cartão de crédito',
-      description: `Fatura ${card.name} - ${format(dueDate, 'MMM/yyyy', { locale: ptBR })}`,
+      category: 'Cartão',
+      description: invoiceDescription(monthKey),
       value: total.toFixed(2),
       date: format(dueDate, 'yyyy-MM-dd'),
       origem: card.name,
     });
+    if (existingId) params.set('updateId', existingId);
     navigate(`/?${params.toString()}`);
   };
 
@@ -117,16 +133,29 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
           </TabsList>
           {months.map(([key, items]) => {
             const total = items.reduce((s, p) => s + p.totalValue, 0);
+            const existing = findExistingInvoice(key);
             return (
               <TabsContent key={key} value={key} className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-md bg-muted">
+                <div className="flex items-center justify-between p-3 rounded-md bg-muted gap-3 flex-wrap">
                   <div>
                     <p className="text-xs text-muted-foreground">Fatura do mês</p>
                     <p className="text-lg font-display font-bold">{fmt(total)}</p>
+                    {existing && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Já adicionada: {fmt(existing.value)}
+                      </p>
+                    )}
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
-                    <Send size={14} /> Adicionar à página inicial
-                  </Button>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
+                      <Send size={14} /> Adicionar à página inicial
+                    </Button>
+                    {existing && (
+                      <Button size="sm" variant="default" onClick={() => handleSendToHome(key, total, existing.id)} className="gap-2">
+                        <RefreshCw size={14} /> Atualizar
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {items.map(p => (
                   <Card key={p.id} className="p-3 bg-card border-border flex items-center justify-between">

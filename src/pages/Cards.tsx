@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { CardProvider, useCards } from '@/contexts/CardContext';
+import { TransactionProvider } from '@/contexts/TransactionContext';
 import AppNav from '@/components/AppNav';
 import CardFormModal from '@/components/CardFormModal';
 import CardDetail from '@/components/CardDetail';
@@ -61,8 +62,9 @@ function CardsContent() {
 export default function Cards() {
   const { signOut } = useAuth();
   return (
-    <CardProvider>
-      <div className="min-h-screen bg-background p-4 md:p-8 max-w-7xl mx-auto">
+    <TransactionProvider>
+      <CardProvider>
+        <div className="min-h-screen bg-background p-4 md:p-8 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-display font-bold">Cartões</h1>
@@ -75,8 +77,9 @@ export default function Cards() {
             </Button>
           </div>
         </div>
-        <CardsContent />
-      </div>
-    </CardProvider>
+          <CardsContent />
+        </div>
+      </CardProvider>
+    </TransactionProvider>
   );
 }

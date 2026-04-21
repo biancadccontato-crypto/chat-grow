@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { TransactionProvider } from '@/contexts/TransactionContext';
+import { TransactionProvider, useTransactions } from '@/contexts/TransactionContext';
 import AppNav from '@/components/AppNav';
 import ScoreCards from '@/components/ScoreCards';
 import TransactionList from '@/components/TransactionList';
@@ -12,16 +12,18 @@ import { Transaction } from '@/types/transaction';
 
 function Dashboard() {
   const { signOut } = useAuth();
+  const { transactions } = useTransactions();
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
   const [initialData, setInitialData] = useState<Partial<Omit<Transaction, 'id'>> | null>(null);
 
-  // Detect query params from "Adicionar fatura à página inicial"
+  // Detect query params from "Adicionar fatura à página inicial" / "Atualizar"
   useEffect(() => {
     if (searchParams.get('type') || searchParams.get('value')) {
       const valueRaw = searchParams.get('value');
-      setInitialData({
+      const updateId = searchParams.get('updateId');
+      const data: Partial<Omit<Transaction, 'id'>> = {
         type: (searchParams.get('type') as Transaction['type']) ?? 'saida',
         category: searchParams.get('category') ?? '',
         description: searchParams.get('description') ?? '',
@@ -29,13 +31,28 @@ function Dashboard() {
         date: searchParams.get('date') ?? undefined,
         origem: searchParams.get('origem') ?? '',
         status: 'pendente',
-      });
-      setEditTransaction(null);
+      };
+
+      if (updateId) {
+        const existing = transactions.find(t => t.id === updateId);
+        if (existing) {
+          // Pre-fill edit modal with new value/date but keep editing the existing record
+          setEditTransaction({ ...existing, value: data.value ?? existing.value, date: data.date ?? existing.date });
+          setInitialData(null);
+        } else {
+          // Fallback: existing not found yet (still loading) — open as new
+          setInitialData(data);
+          setEditTransaction(null);
+        }
+      } else {
+        setInitialData(data);
+        setEditTransaction(null);
+      }
       setModalOpen(true);
       // limpa a URL pra não reabrir
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, transactions]);
 
   const handleEdit = (t: Transaction) => {
     setEditTransaction(t);
