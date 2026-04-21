@@ -17,7 +17,7 @@ export interface Transaction {
 
 export const CATEGORIES: Record<TransactionType, string[]> = {
   entrada: ['Salário', 'Ganhos', 'Saque', 'Freelance'],
-  saida: ['Moradia', 'Transporte', 'Lazer', 'Estudos', 'Vestimenta', 'Alimentação', 'Saúde'],
+  saida: ['Cartão', 'Moradia', 'Transporte', 'Lazer', 'Estudos', 'Vestimenta', 'Alimentação', 'Saúde'],
   debito: ['Cartão de crédito', 'Financiamento', 'Contas vencidas', 'Assinatura', 'Parcelamento'],
   investimento: ['Poupança', 'Cofrinhos', 'Conta corrente'],
 };
