@@ -1,17 +1,19 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { CreditCard, CardPurchase } from '@/types/card';
-import { addMonths, format } from 'date-fns';
+import { CreditCard, CardPurchase, SavedInvoice } from '@/types/card';
+import { addMonths, format, differenceInCalendarMonths } from 'date-fns';
 import { toast } from 'sonner';
 
 interface CardContextType {
   cards: CreditCard[];
   purchases: CardPurchase[];
+  savedInvoices: SavedInvoice[];
   addCard: (c: Omit<CreditCard, 'id' | 'createdAt'>) => void;
   updateCard: (id: string, c: Partial<CreditCard>) => void;
   deleteCard: (id: string) => void;
   addPurchase: (p: Omit<CardPurchase, 'id'>) => void;
   updatePurchase: (id: string, p: Partial<CardPurchase>) => void;
   deletePurchase: (id: string) => void;
+  saveInvoiceSnapshot: (cardId: string, monthKey: string, total: number, items: SavedInvoice['items']) => void;
 }
 
 const CardContext = createContext<CardContextType | null>(null);
@@ -24,6 +26,7 @@ export const useCards = () => {
 
 const CARDS_KEY = 'app:cards';
 const PURCHASES_KEY = 'app:card_purchases';
+const INVOICES_KEY = 'app:saved_invoices';
 
 export const CardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cards, setCards] = useState<CreditCard[]>(() => {
