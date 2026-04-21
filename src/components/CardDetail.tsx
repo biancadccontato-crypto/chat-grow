@@ -2,14 +2,16 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCards } from '@/contexts/CardContext';
 import { useTransactions } from '@/contexts/TransactionContext';
-import { CreditCard as CardType, CardPurchase } from '@/types/card';
+import { CreditCard as CardType, CardPurchase, SavedInvoice } from '@/types/card';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Pencil, Trash2, Plus, Send, RefreshCw } from 'lucide-react';
+import { Pencil, Trash2, Plus, Send, RefreshCw, Download, FileText } from 'lucide-react';
 import PurchaseFormModal from './PurchaseFormModal';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Props {
   card: CardType;
@@ -21,7 +23,7 @@ const fmt = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
-  const { purchases, deletePurchase } = useCards();
+  const { purchases, deletePurchase, savedInvoices, saveInvoiceSnapshot } = useCards();
   const { transactions } = useTransactions();
   const navigate = useNavigate();
   const [purchaseModal, setPurchaseModal] = useState(false);
@@ -65,6 +67,16 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
   const handleSendToHome = (monthKey: string, total: number, existingId?: string) => {
     const [y, m] = monthKey.split('-').map(Number);
     const dueDate = new Date(y, m - 1, Math.min(card.dueDay, new Date(y, m, 0).getDate()));
+
+    // Salva snapshot da fatura para o relatório (3 meses)
+    const items = (months.find(([k]) => k === monthKey)?.[1] ?? []).map(p => ({
+      description: p.description,
+      category: p.category,
+      date: p.date,
+      value: p.totalValue,
+    }));
+    saveInvoiceSnapshot(card.id, monthKey, total, items);
+
     const params = new URLSearchParams({
       type: 'saida',
       category: 'Cartão',
@@ -75,6 +87,43 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
     });
     if (existingId) params.set('updateId', existingId);
     navigate(`/?${params.toString()}`);
+  };
+
+  // Faturas salvas deste cartão (ordenadas mais recentes primeiro)
+  const cardSavedInvoices = useMemo(
+    () => savedInvoices.filter(inv => inv.cardId === card.id).sort((a, b) => b.monthKey.localeCompare(a.monthKey)),
+    [savedInvoices, card.id]
+  );
+
+  const downloadInvoicePdf = (inv: SavedInvoice) => {
+    const [y, m] = inv.monthKey.split('-').map(Number);
+    const monthLabel = format(new Date(y, m - 1, 1), 'MMMM/yyyy', { locale: ptBR });
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Fatura ${card.name}`, 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Mês de referência: ${monthLabel}`, 14, 26);
+    doc.text(`Vencimento dia ${card.dueDay} • Limite ${fmt(card.limit)}`, 14, 32);
+    doc.text(`Salva em: ${format(parseISO(inv.savedAt), "dd/MM/yyyy 'às' HH:mm")}`, 14, 38);
+
+    autoTable(doc, {
+      startY: 46,
+      head: [['Data', 'Descrição', 'Categoria', 'Valor']],
+      body: inv.items.map(it => [
+        format(parseISO(it.date), 'dd/MM/yyyy'),
+        it.description,
+        it.category,
+        fmt(it.value),
+      ]),
+      foot: [['', '', 'Total', fmt(inv.total)]],
+      headStyles: { fillColor: [30, 30, 30] },
+      footStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
+      styles: { fontSize: 10 },
+    });
+
+    doc.save(`fatura-${card.name.replace(/\s+/g, '-').toLowerCase()}-${inv.monthKey}.pdf`);
   };
 
   return (
