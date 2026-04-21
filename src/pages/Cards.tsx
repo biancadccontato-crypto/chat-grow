@@ -77,8 +77,9 @@ export default function Cards() {
             </Button>
           </div>
         </div>
-        <CardsContent />
-      </div>
-    </CardProvider>
+          <CardsContent />
+        </div>
+      </CardProvider>
+    </TransactionProvider>
   );
 }
