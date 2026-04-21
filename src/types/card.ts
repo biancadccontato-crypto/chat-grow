@@ -19,6 +19,20 @@ export interface CardPurchase {
   parcelaAtual?: number; // 1..parcelas
 }
 
+export interface SavedInvoice {
+  id: string;
+  cardId: string;
+  monthKey: string; // yyyy-MM
+  total: number;
+  savedAt: string; // ISO date
+  items: {
+    description: string;
+    category: string;
+    date: string;
+    value: number;
+  }[];
+}
+
 export const CARD_CATEGORIES = [
   'Alimentação',
   'Transporte',
