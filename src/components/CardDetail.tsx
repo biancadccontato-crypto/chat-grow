@@ -159,77 +159,119 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
         <p className="text-xs text-muted-foreground mt-2">{pctLimite.toFixed(1)}% utilizado</p>
       </Card>
 
-      <Button onClick={() => { setEditing(null); setPurchaseModal(true); }} className="gap-2">
-        <Plus size={16} /> Nova compra
-      </Button>
+      <Tabs defaultValue="compras" className="mt-2">
+        <TabsList>
+          <TabsTrigger value="compras">Compras</TabsTrigger>
+          <TabsTrigger value="salvas">Faturas Salvas</TabsTrigger>
+        </TabsList>
 
-      {/* Abas por mês */}
-      {months.length === 0 ? (
-        <Card className="p-8 text-center bg-card border-border text-muted-foreground">
-          Nenhuma compra ainda. Adicione a primeira!
-        </Card>
-      ) : (
-        <Tabs defaultValue={defaultMonth} className="mt-4">
-          <TabsList className="flex-wrap h-auto">
-            {months.map(([key]) => {
-              const [y, m] = key.split('-').map(Number);
+        <TabsContent value="compras" className="space-y-4">
+          <Button onClick={() => { setEditing(null); setPurchaseModal(true); }} className="gap-2">
+            <Plus size={16} /> Nova compra
+          </Button>
+
+          {months.length === 0 ? (
+            <Card className="p-8 text-center bg-card border-border text-muted-foreground">
+              Nenhuma compra ainda. Adicione a primeira!
+            </Card>
+          ) : (
+            <Tabs defaultValue={defaultMonth} className="mt-4">
+              <TabsList className="flex-wrap h-auto">
+                {months.map(([key]) => {
+                  const [y, m] = key.split('-').map(Number);
+                  return (
+                    <TabsTrigger key={key} value={key}>
+                      {format(new Date(y, m - 1, 1), 'MMM/yy', { locale: ptBR })}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+              {months.map(([key, items]) => {
+                const total = items.reduce((s, p) => s + p.totalValue, 0);
+                const existing = findExistingInvoice(key);
+                return (
+                  <TabsContent key={key} value={key} className="space-y-2">
+                    <div className="flex items-center justify-between p-3 rounded-md bg-muted gap-3 flex-wrap">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Fatura do mês</p>
+                        <p className="text-lg font-display font-bold">{fmt(total)}</p>
+                        {existing && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Já adicionada: {fmt(existing.value)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
+                          <Send size={14} /> Adicionar à página inicial
+                        </Button>
+                        {existing && (
+                          <Button size="sm" variant="default" onClick={() => handleSendToHome(key, total, existing.id)} className="gap-2">
+                            <RefreshCw size={14} /> Atualizar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {items.map(p => (
+                      <Card key={p.id} className="p-3 bg-card border-border flex items-center justify-between">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{p.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {p.category} • {format(parseISO(p.date), 'dd/MM/yyyy')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-medium">{fmt(p.totalValue)}</span>
+                          <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setPurchaseModal(true); }}>
+                            <Pencil size={14} />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(p.parentId ?? p.id)}>
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
+          )}
+        </TabsContent>
+
+        <TabsContent value="salvas" className="space-y-3">
+          <Card className="p-3 bg-muted border-border text-xs text-muted-foreground">
+            <FileText size={14} className="inline mr-1" />
+            Relatório dos últimos 3 meses. Faça o download em PDF para guardar — o sistema exclui automaticamente após esse período.
+          </Card>
+
+          {cardSavedInvoices.length === 0 ? (
+            <Card className="p-8 text-center bg-card border-border text-muted-foreground">
+              Nenhuma fatura salva ainda. Use "Adicionar à página inicial" em uma fatura para salvá-la aqui.
+            </Card>
+          ) : (
+            cardSavedInvoices.map(inv => {
+              const [y, m] = inv.monthKey.split('-').map(Number);
+              const monthLabel = format(new Date(y, m - 1, 1), 'MMMM/yyyy', { locale: ptBR });
               return (
-                <TabsTrigger key={key} value={key}>
-                  {format(new Date(y, m - 1, 1), 'MMM/yy', { locale: ptBR })}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-          {months.map(([key, items]) => {
-            const total = items.reduce((s, p) => s + p.totalValue, 0);
-            const existing = findExistingInvoice(key);
-            return (
-              <TabsContent key={key} value={key} className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-md bg-muted gap-3 flex-wrap">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Fatura do mês</p>
-                    <p className="text-lg font-display font-bold">{fmt(total)}</p>
-                    {existing && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Já adicionada: {fmt(existing.value)}
-                      </p>
-                    )}
+                <Card key={inv.id} className="p-4 bg-card border-border flex items-center justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <p className="font-medium capitalize">{monthLabel}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {inv.items.length} {inv.items.length === 1 ? 'compra' : 'compras'} • Salva em {format(parseISO(inv.savedAt), 'dd/MM/yyyy')}
+                    </p>
                   </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
-                      <Send size={14} /> Adicionar à página inicial
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-display font-bold">{fmt(inv.total)}</span>
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => downloadInvoicePdf(inv)}>
+                      <Download size={14} /> PDF
                     </Button>
-                    {existing && (
-                      <Button size="sm" variant="default" onClick={() => handleSendToHome(key, total, existing.id)} className="gap-2">
-                        <RefreshCw size={14} /> Atualizar
-                      </Button>
-                    )}
                   </div>
-                </div>
-                {items.map(p => (
-                  <Card key={p.id} className="p-3 bg-card border-border flex items-center justify-between">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {p.category} • {format(parseISO(p.date), 'dd/MM/yyyy')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-medium">{fmt(p.totalValue)}</span>
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setPurchaseModal(true); }}>
-                        <Pencil size={14} />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePurchase(p.parentId ?? p.id)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-      )}
+                </Card>
+              );
+            })
+          )}
+        </TabsContent>
+      </Tabs>
 
       <PurchaseFormModal
         open={purchaseModal}
