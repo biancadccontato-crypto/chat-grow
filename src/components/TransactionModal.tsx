@@ -12,9 +12,10 @@ interface TransactionModalProps {
   open: boolean;
   onClose: () => void;
   editTransaction?: Transaction | null;
+  initialData?: Partial<Omit<Transaction, 'id'>> | null;
 }
 
-export default function TransactionModal({ open, onClose, editTransaction }: TransactionModalProps) {
+export default function TransactionModal({ open, onClose, editTransaction, initialData }: TransactionModalProps) {
   const { addTransaction, updateTransaction, customCategories, addCustomCategory } = useTransactions();
 
   const [type, setType] = useState<TransactionType>('entrada');
@@ -38,6 +39,15 @@ export default function TransactionModal({ open, onClose, editTransaction }: Tra
       setStatus(editTransaction.status);
       setParcelas(editTransaction.parcelas.toString());
       setOrigem(editTransaction.origem || '');
+    } else if (initialData) {
+      setType((initialData.type as TransactionType) ?? 'saida');
+      setDescription(initialData.description ?? '');
+      setCategory(initialData.category ?? '');
+      setValue(initialData.value !== undefined ? String(initialData.value) : '');
+      setDate(initialData.date ?? format(new Date(), 'yyyy-MM-dd'));
+      setStatus((initialData.status as TransactionStatus) ?? 'pendente');
+      setParcelas(initialData.parcelas ? String(initialData.parcelas) : '1');
+      setOrigem(initialData.origem ?? '');
     } else {
       setType('entrada');
       setDescription('');
@@ -50,7 +60,7 @@ export default function TransactionModal({ open, onClose, editTransaction }: Tra
     }
     setShowNewCategory(false);
     setNewCategory('');
-  }, [editTransaction, open]);
+  }, [editTransaction, initialData, open]);
 
   const allCategories = [...CATEGORIES[type], ...(customCategories[type] || [])];
 
