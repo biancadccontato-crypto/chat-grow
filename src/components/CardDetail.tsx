@@ -133,16 +133,29 @@ export default function CardDetail({ card, onEditCard, onDeleteCard }: Props) {
           </TabsList>
           {months.map(([key, items]) => {
             const total = items.reduce((s, p) => s + p.totalValue, 0);
+            const existing = findExistingInvoice(key);
             return (
               <TabsContent key={key} value={key} className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-md bg-muted">
+                <div className="flex items-center justify-between p-3 rounded-md bg-muted gap-3 flex-wrap">
                   <div>
                     <p className="text-xs text-muted-foreground">Fatura do mês</p>
                     <p className="text-lg font-display font-bold">{fmt(total)}</p>
+                    {existing && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Já adicionada: {fmt(existing.value)}
+                      </p>
+                    )}
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
-                    <Send size={14} /> Adicionar à página inicial
-                  </Button>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant="outline" onClick={() => handleSendToHome(key, total)} className="gap-2">
+                      <Send size={14} /> Adicionar à página inicial
+                    </Button>
+                    {existing && (
+                      <Button size="sm" variant="default" onClick={() => handleSendToHome(key, total, existing.id)} className="gap-2">
+                        <RefreshCw size={14} /> Atualizar
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {items.map(p => (
                   <Card key={p.id} className="p-3 bg-card border-border flex items-center justify-between">
