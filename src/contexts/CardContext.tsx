@@ -45,6 +45,17 @@ export const CardProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [];
     }
   });
+  const [savedInvoices, setSavedInvoices] = useState<SavedInvoice[]>(() => {
+    try {
+      const raw = localStorage.getItem(INVOICES_KEY);
+      const list: SavedInvoice[] = raw ? JSON.parse(raw) : [];
+      // Auto-prune anything older than 3 months from now
+      const now = new Date();
+      return list.filter(inv => differenceInCalendarMonths(now, new Date(inv.savedAt)) < 3);
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
@@ -53,6 +64,10 @@ export const CardProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem(PURCHASES_KEY, JSON.stringify(purchases));
   }, [purchases]);
+
+  useEffect(() => {
+    localStorage.setItem(INVOICES_KEY, JSON.stringify(savedInvoices));
+  }, [savedInvoices]);
 
   const addCard = useCallback((c: Omit<CreditCard, 'id' | 'createdAt'>) => {
     const newCard: CreditCard = {
@@ -117,9 +132,44 @@ export const CardProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Compra removida');
   }, []);
 
+  const saveInvoiceSnapshot = useCallback(
+    (cardId: string, monthKey: string, total: number, items: SavedInvoice['items']) => {
+      const now = new Date();
+      setSavedInvoices(prev => {
+        // Replace any existing snapshot for same card+month, then prune >3 months
+        const filtered = prev.filter(
+          inv => !(inv.cardId === cardId && inv.monthKey === monthKey)
+        );
+        const next: SavedInvoice = {
+          id: crypto.randomUUID(),
+          cardId,
+          monthKey,
+          total,
+          savedAt: now.toISOString(),
+          items,
+        };
+        return [next, ...filtered].filter(
+          inv => differenceInCalendarMonths(now, new Date(inv.savedAt)) < 3
+        );
+      });
+    },
+    []
+  );
+
   return (
     <CardContext.Provider
-      value={{ cards, purchases, addCard, updateCard, deleteCard, addPurchase, updatePurchase, deletePurchase }}
+      value={{
+        cards,
+        purchases,
+        savedInvoices,
+        addCard,
+        updateCard,
+        deleteCard,
+        addPurchase,
+        updatePurchase,
+        deletePurchase,
+        saveInvoiceSnapshot,
+      }}
     >
       {children}
     </CardContext.Provider>
