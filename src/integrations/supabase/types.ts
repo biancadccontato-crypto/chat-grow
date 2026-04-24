@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_purchases: {
+        Row: {
+          card_id: string
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          parcela_atual: number | null
+          parcelas: number
+          parent_id: string | null
+          total_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          category: string
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          parcela_atual?: number | null
+          parcelas?: number
+          parent_id?: string | null
+          total_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          parcela_atual?: number | null
+          parcelas?: number
+          parent_id?: string | null
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_purchases_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          color: string | null
+          created_at: string
+          due_day: number
+          id: string
+          limit: number
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          due_day: number
+          id?: string
+          limit: number
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          due_day?: number
+          id?: string
+          limit?: number
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       custom_categories: {
         Row: {
           created_at: string
@@ -37,6 +123,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      saved_invoices: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          items: Json
+          month_key: string
+          saved_at: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          items?: Json
+          month_key: string
+          saved_at?: string
+          total: number
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          items?: Json
+          month_key?: string
+          saved_at?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_invoices_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
