@@ -85,6 +85,58 @@ export const CardProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (pRes.error) { toast.error('Erro ao carregar compras'); console.error(pRes.error); }
       else setPurchases((pRes.data || []).map(mapPurchase));
 
+      // Migração única do localStorage -> Supabase (se houver dados locais e nenhum cartão no servidor)
+      try {
+        const migratedKey = `app:cards_migrated:${user.id}`;
+        const alreadyMigrated = localStorage.getItem(migratedKey);
+        const localCardsRaw = localStorage.getItem('app:cards');
+        if (!alreadyMigrated && localCardsRaw && (cRes.data || []).length === 0) {
+          const localCards: any[] = JSON.parse(localCardsRaw);
+          if (localCards.length > 0) {
+            const idMap = new Map<string, string>();
+            const cardRows = localCards.map(c => {
+              const newId = crypto.randomUUID();
+              idMap.set(c.id, newId);
+              return {
+                id: newId, user_id: user.id, name: c.name,
+                limit: c.limit, due_day: c.dueDay, color: c.color ?? null,
+              };
+            });
+            const insCards = await supabase.from('cards').insert(cardRows).select();
+            if (!insCards.error) setCards((insCards.data || []).map(mapCard));
+
+            const localPurchasesRaw = localStorage.getItem('app:card_purchases');
+            const localPurchases: any[] = localPurchasesRaw ? JSON.parse(localPurchasesRaw) : [];
+            if (localPurchases.length > 0) {
+              const pIdMap = new Map<string, string>();
+              localPurchases.forEach(p => pIdMap.set(p.id, crypto.randomUUID()));
+              const pRows = localPurchases
+                .filter(p => idMap.has(p.cardId))
+                .map(p => ({
+                  id: pIdMap.get(p.id),
+                  user_id: user.id,
+                  card_id: idMap.get(p.cardId),
+                  description: p.description,
+                  category: p.category,
+                  total_value: p.totalValue,
+                  date: p.date,
+                  parcelas: p.parcelas,
+                  parcela_atual: p.parcelaAtual ?? null,
+                  parent_id: p.parentId ? pIdMap.get(p.parentId) ?? null : null,
+                }));
+              if (pRows.length > 0) {
+                const insP = await supabase.from('card_purchases').insert(pRows).select();
+                if (!insP.error) setPurchases((insP.data || []).map(mapPurchase));
+              }
+            }
+            toast.success('Dados de cartões migrados para a nuvem');
+          }
+          localStorage.setItem(migratedKey, '1');
+        }
+      } catch (e) {
+        console.error('Falha na migração localStorage->Supabase:', e);
+      }
+
       if (iRes.error) { console.error(iRes.error); }
       else {
         const now = new Date();
