@@ -32,7 +32,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
   // Débitos ordenados por data crescente (mais antigos primeiro)
   const general = sorted.filter(t => t.status === 'confirmado');
   const debitos = visible
-    .filter(t => t.type === 'debito')
+    .filter(t => t.type === 'debito' && t.status !== 'confirmado')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
   const entradas = sorted.filter(t => t.type === 'entrada');
