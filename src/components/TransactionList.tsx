@@ -128,6 +128,9 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
       <TabsContent value="investimentos" className="mt-4">
         {renderTable(investimentos, false, false)}
       </TabsContent>
+      <TabsContent value="parcelamentos" className="mt-4">
+        {renderTable(parcelamentos, true, false)}
+      </TabsContent>
       <TabsContent value="todos" className="mt-4">
         {renderTable(todosSorted, false, true)}
       </TabsContent>
