@@ -113,6 +113,7 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
         <TabsTrigger value="debitos">Débitos</TabsTrigger>
         <TabsTrigger value="entradas">Entradas</TabsTrigger>
         <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
+        <TabsTrigger value="parcelamentos">Parcelamentos</TabsTrigger>
         <TabsTrigger value="todos">Todos</TabsTrigger>
       </TabsList>
       <TabsContent value="balanco" className="mt-4">
