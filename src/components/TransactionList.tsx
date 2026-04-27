@@ -36,6 +36,9 @@ export default function TransactionList({ onEdit }: TransactionListProps) {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const investimentos = sorted.filter(t => t.type === 'investimento');
   const entradas = sorted.filter(t => t.type === 'entrada');
+  const parcelamentos = [...transactions]
+    .filter(t => t.type === 'debito' && t.category === 'Parcelamento')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const handleStatusToggle = (t: Transaction) => {
     updateTransaction(t.id, { status: t.status === 'pendente' ? 'confirmado' : 'pendente' });
